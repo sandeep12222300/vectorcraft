@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VectorCraft</title>
+<style>
+:root {
+  --bg: #f5f8ff;
+  --card: #ffffff;
+  --border: #dce5f3;
+  --cs: #2563eb;
+  --math: #7c3aed;
+  --food: #d97706;
+  --sports: #059669;
+  --accent: #2563eb;
+  --text: #172b4d;
+  --muted: #61738f;
+  --red: #dc2626;
+  --green: #15803d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+  height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+header h1 {
+  font-size: 17px; font-weight: 600; letter-spacing: 4px;
+  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; letter-spacing: 1px; border: 1px solid var(--border); color: var(--muted); }
+.badge.hl { border-color: var(--accent); color: var(--accent); background: rgba(37,99,235,.08); }
+.badge.ok { border-color: var(--green); color: var(--green); background: rgba(166,227,161,.1); }
+.badge.err { border-color: var(--red); color: var(--red); background: rgba(243,139,168,.1); }
+#statsLabel { margin-left: auto; font-size: 11px; color: var(--muted); }
+
+/* ── LAYOUT ── */
+.layout { display: flex; flex: 1; overflow: hidden; }
+.left-panel { width: 260px; flex-shrink: 0; background: var(--card); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 18px; }
+.center-panel { flex: 1; position: relative; overflow: hidden; }
+#scatter { display: block; width: 100%; height: 100%; }
+.right-panel { width: 360px; flex-shrink: 0; background: var(--card); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── TABS ── */
+.tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tab { flex: 1; padding: 10px 6px; text-align: center; font-size: 10px; letter-spacing: 1px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all .2s; }
+.tab.on { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-content { display: none; flex: 1; overflow-y: auto; padding: 16px; flex-direction: column; gap: 16px; }
+.tab-content.on { display: flex; }
+
+/* ── COMMON COMPONENTS ── */
+.sec { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+input[type=text], select, textarea {
+  width: 100%; background: #fff; border: 1px solid var(--border); color: var(--text);
+  padding: 9px 11px; border-radius: 6px; font-family: inherit; font-size: 12px; outline: none; transition: border-color .2s;
+}
+input[type=text]:focus, select:focus, textarea:focus { border-color: var(--accent); }
+textarea { resize: vertical; min-height: 100px; line-height: 1.5; }
+select option { background: var(--card); }
+input[type=range] { width: 100%; accent-color: var(--accent); background: transparent; border: none; padding: 0; }
+button {
+  width: 100%; padding: 9px 14px; border: none; border-radius: 6px; cursor: pointer;
+  font-family: inherit; font-size: 12px; font-weight: 500; letter-spacing: .5px; transition: all .2s;
+}
+.btn-p { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff; box-shadow: 0 4px 14px rgba(37,99,235,.18); }
+.btn-p:hover { box-shadow: 0 6px 18px rgba(37,99,235,.24); transform: translateY(-1px); }
+.btn-p:disabled { opacity: .5; transform: none; cursor: wait; }
+.btn-s { background: #edf3fc; color: var(--text); }
+.btn-s:hover { background: #1c1c35; }
+.btn-s:disabled { opacity: .5; cursor: wait; }
+.btn-g { background: #ecfdf3; color: var(--green); border: 1px solid #bbf7d0; }
+.btn-g:hover { background: rgba(166,227,161,.22); }
+.btn-g:disabled { opacity: .5; cursor: wait; }
+
+.algo-row { display: flex; gap: 5px; }
+.algo-btn { flex: 1; padding: 7px 4px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); font-size: 10px; cursor: pointer; text-align: center; transition: all .2s; letter-spacing: .5px; font-family: inherit; }
+.algo-btn.on { border-color: var(--accent); color: var(--accent); background: rgba(37,99,235,.08); }
+
+.legend { display: flex; flex-direction: column; gap: 5px; }
+.leg-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── RESULTS ── */
+.results { display: flex; flex-direction: column; gap: 7px; }
+.rcard { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; animation: fadeUp .25s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)} }
+.rcard:hover { border-color: #252545; }
+.rrank { font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 3px; }
+.rmeta { font-size: 12px; line-height: 1.4; margin-bottom: 6px; }
+.rfoot { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.rcat  { font-size: 9px; padding: 2px 7px; border-radius: 8px; letter-spacing: .5px; }
+.rdist { font-size: 10px; color: var(--muted); flex: 1; text-align: right; }
+.del   { background: rgba(243,139,168,.12); color: var(--red); border: 1px solid rgba(243,139,168,.25); border-radius: 4px; cursor: pointer; font-size: 10px; padding: 2px 7px; font-family: inherit; transition: background .2s; width: auto; }
+.del:hover { background: rgba(243,139,168,.25); }
+
+/* ── LATENCY / BENCH / LAYERS ── */
+.lat-big { font-size: 32px; font-weight: 600; color: var(--cs); text-shadow: 0 0 20px rgba(0,217,255,.4); }
+.lat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.bench { display: flex; flex-direction: column; gap: 9px; }
+.brow  { display: flex; flex-direction: column; gap: 3px; }
+.blabel { display: flex; justify-content: space-between; font-size: 10px; }
+.btrack { height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.bfill  { height: 100%; border-radius: 4px; transition: width .5s ease; }
+.layers { display: flex; flex-direction: column; gap: 5px; }
+.lrow   { display: flex; align-items: center; gap: 7px; font-size: 10px; }
+.lnum   { width: 18px; text-align: right; color: var(--accent); }
+.ltrack { flex: 1; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.lfill  { height: 100%; background: var(--accent); border-radius: 3px; opacity: .7; transition: width .4s; }
+.lcount { width: 80px; text-align: right; color: var(--muted); }
+#vecCvs { display: block; width: 100%; background: var(--bg); border-radius: 5px; }
+
+/* ── DOCUMENT LIST ── */
+.doc-list { display: flex; flex-direction: column; gap: 7px; }
+.dcard { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; animation: fadeUp .25s ease; }
+.dcard-title { font-size: 12px; font-weight: 500; margin-bottom: 4px; color: var(--green); }
+.dcard-preview { font-size: 10px; color: var(--muted); line-height: 1.5; margin-bottom: 6px; }
+.dcard-foot { display: flex; justify-content: space-between; align-items: center; }
+.dcard-words { font-size: 9px; color: var(--muted); }
+
+/* ── OLLAMA STATUS ── */
+.ollama-status { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; font-size: 11px; line-height: 1.6; }
+.ollama-status.ok { border-color: rgba(166,227,161,.3); }
+.ollama-status.err { border-color: rgba(243,139,168,.3); }
+
+/* ── CHAT ── */
+.chat-history { display: flex; flex-direction: column; gap: 12px; }
+.chat-q { background: rgba(37,99,235,.08); border: 1px solid rgba(37,99,235,.18); border-radius: 7px; padding: 10px 12px; font-size: 12px; line-height: 1.5; }
+.chat-a { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 12px; }
+.chat-a-label { font-size: 9px; letter-spacing: 2px; color: var(--green); margin-bottom: 6px; }
+.chat-a-text { font-size: 12px; line-height: 1.7; white-space: pre-wrap; }
+.chat-ctx { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+.chat-ctx-label { font-size: 9px; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+.ctx-chip { display: inline-block; font-size: 9px; padding: 2px 7px; border-radius: 10px; margin: 2px; background: #eff6ff; border: 1px solid #dbeafe; color: var(--accent); cursor: pointer; }
+.ctx-chip:hover { background: #dbeafe; }
+.ctx-expand { display: none; font-size: 10px; color: var(--muted); line-height: 1.5; margin-top: 6px; padding: 8px; background: #f8faff; border-radius: 5px; }
+.thinking { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.typing::after { content: '▋'; animation: blink 1s step-end infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ── TOOLTIP ── */
+#tip { position: fixed; display: none; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 7px 11px; font-size: 11px; pointer-events: none; max-width: 220px; z-index: 200; line-height: 1.5; }
+.top-nav { display:flex; gap:6px; margin-left:14px; }
+.top-nav button { width:auto; padding:8px 12px; background:transparent; color:var(--muted); border:1px solid transparent; }
+.top-nav button.active { color:var(--accent); background:#eff6ff; border-color:#bfdbfe; }
+#learnWorkspace { display:none; flex:1; overflow:auto; padding:26px clamp(16px,4vw,56px); background:linear-gradient(180deg,#f8fbff,#f2f6fd); }
+.learn-wrap { max-width:1320px; margin:0 auto; display:flex; flex-direction:column; gap:22px; }
+.hero { background:linear-gradient(120deg,#eff6ff,#fff 68%); border:1px solid #dbeafe; border-radius:18px; padding:clamp(22px,4vw,42px); display:grid; grid-template-columns:1.4fr .8fr; gap:24px; align-items:center; }
+.eyebrow { color:#2563eb; font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; }
+.hero h2 { font-size:clamp(26px,3vw,40px); letter-spacing:-1px; line-height:1.12; margin-bottom:14px; color:#142746; }
+.hero p,.learn-card p { color:#536782; font-size:14px; line-height:1.65; }
+.hero-steps { display:grid; gap:9px; }
+.hero-step { display:flex; align-items:center; gap:10px; padding:12px; background:#fff; border:1px solid #e1eaf7; border-radius:10px; font-size:12px; }
+.step-num { display:grid; place-items:center; width:28px; height:28px; flex-shrink:0; border-radius:8px; color:#1d4ed8; background:#eff6ff; font-weight:700; }
+.learn-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.learn-card { text-align:left; width:100%; min-height:180px; padding:20px; border:1px solid var(--border); background:#fff; border-radius:14px; box-shadow:0 4px 16px rgba(20,54,100,.035); color:var(--text); }
+.learn-card:hover { border-color:#93c5fd; transform:translateY(-2px); }
+.learn-card h3 { font-size:16px; margin:12px 0 7px; color:#19345c; }
+.learn-icon { display:grid; place-items:center; width:38px; height:38px; border-radius:11px; color:#1d4ed8; background:#eff6ff; font-size:19px; }
+.learn-section { background:#fff; border:1px solid var(--border); border-radius:14px; padding:22px; }
+.learn-section h3 { font-size:18px; margin-bottom:8px; }
+.learn-section .sub { color:var(--muted); font-size:13px; line-height:1.6; margin-bottom:16px; }
+.lesson-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+.lesson { border:1px solid var(--border); border-radius:10px; padding:14px; background:#fff; cursor:pointer; text-align:left; color:var(--text); }
+.lesson.active { border-color:#60a5fa; background:#eff6ff; }
+.lesson strong { display:block; font-size:12px; margin-bottom:6px; }
+.lesson span { display:block; font-size:11px; line-height:1.5; color:var(--muted); }
+.lesson-detail { margin-top:14px; padding:18px; background:#f8fbff; border:1px solid #dbeafe; border-radius:10px; font-size:13px; line-height:1.7; }
+.lesson-detail code { background:#eaf1fc; border-radius:4px; padding:2px 5px; color:#1d4ed8; }
+.pipeline { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; margin:16px 0; }
+.pipeline-step { border:1px solid var(--border); border-radius:10px; padding:12px; background:#f8fbff; min-height:115px; }
+.pipeline-step .n { color:#2563eb; font-size:11px; font-weight:700; margin-bottom:8px; }
+.pipeline-step strong { display:block; font-size:12px; margin-bottom:6px; }
+.pipeline-step span { color:var(--muted); font-size:11px; line-height:1.5; }
+.pipeline-step.done { border-color:#86efac; background:#f0fdf4; }
+.explain-box { padding:14px; border-radius:10px; border:1px solid var(--border); background:#f8fbff; color:#334155; font-size:13px; line-height:1.65; }
+.playground-row { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:start; }
+.learn-status { color:var(--muted); font-size:12px; margin-top:8px; line-height:1.6; }
+@media (max-width:1100px) { .left-panel{width:220px}.right-panel{width:320px}.learn-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}.lesson-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:760px) { body{height:auto;min-height:100vh;overflow:auto} header{flex-wrap:wrap;padding:10px}.top-nav{margin-left:0}#statsLabel{width:100%;margin-left:0}.layout{overflow:visible;flex-direction:column}.left-panel,.right-panel{width:100%;max-height:none}.center-panel{height:380px;min-height:300px}.hero{grid-template-columns:1fr}.learn-grid,.lesson-grid,.pipeline{grid-template-columns:1fr}.playground-row{grid-template-columns:1fr}.top-nav button{font-size:11px;padding:7px 9px} }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>VectorCraft</h1>
+  <span class="badge hl">HNSW</span>
+  <span class="badge">KD-TREE</span>
+  <span class="badge">BRUTE FORCE</span>
+  <span class="badge" id="ollamaBadge">OLLAMA…</span>
+  <nav class="top-nav" aria-label="Main navigation">
+    <button id="learnNav" onclick="showWorkspace('learn')" type="button">Learn AI</button>
+    <button id="labNav" class="active" onclick="showWorkspace('lab')" type="button">AI Lab</button>
+  </nav>
+  <span id="statsLabel">loading…</span>
+</header>
+
+<section id="learnWorkspace" aria-label="Learn AI workspace">
+  <div class="learn-wrap">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">VectorCraft · AI for everyone</div>
+        <h2>Understand how AI works.<br>Without writing code.</h2>
+        <p>Explore how a language model turns a question into an answer, how your documents give it context, and why an AI answer still needs evidence. Start with the guided tour, then try it with your own documents.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px">
+          <button class="btn-p" style="width:auto" onclick="startGuidedTour()">Start the guided tour →</button>
+          <button class="btn-s" style="width:auto" onclick="showWorkspace('lab');switchTab('docs')">Add your first document</button>
+        </div>
+      </div>
+      <div class="hero-steps">
+        <div class="hero-step"><span class="step-num">1</span><span><strong>Ask</strong><br>Write a question in everyday language.</span></div>
+        <div class="hero-step"><span class="step-num">2</span><span><strong>Retrieve</strong><br>Find relevant passages from your documents.</span></div>
+        <div class="hero-step"><span class="step-num">3</span><span><strong>Generate</strong><br>The LLM writes an answer using the context.</span></div>
+        <div class="hero-step"><span class="step-num">4</span><span><strong>Inspect</strong><br>Check the evidence behind the response.</span></div>
+      </div>
+    </section>
+
+    <section class="learn-section">
+      <h3>Choose a hands-on experience</h3>
+      <p class="sub">No coding required. Technical details are available when you want them.</p>
+      <div class="learn-grid">
+        <button class="learn-card" onclick="startGuidedTour()"><span class="learn-icon">↗</span><h3>Watch an LLM answer</h3><p>Follow the question through embedding, retrieval, context and generation using a real RAG request.</p></button>
+        <button class="learn-card" onclick="showWorkspace('lab');switchTab('docs')"><span class="learn-icon">▤</span><h3>Chat with your documents</h3><p>Save notes or documentation, then ask questions grounded in the passages that were retrieved.</p></button>
+        <button class="learn-card" onclick="showWorkspace('lab');switchTab('search')"><span class="learn-icon">◎</span><h3>Explore semantic search</h3><p>Compare vector-search algorithms and see which stored items are returned for a query.</p></button>
+        <button class="learn-card" onclick="selectLesson('embeddings')"><span class="learn-icon">⠿</span><h3>Understand embeddings</h3><p>Learn how text becomes a numerical representation and what a vector map can—and cannot—show.</p></button>
+        <button class="learn-card" onclick="selectLesson('hallucinations')"><span class="learn-icon">✓</span><h3>Check AI reliability</h3><p>Inspect retrieved evidence and learn to spot answers that are not adequately supported.</p></button>
+        <button class="learn-card" onclick="selectLesson('prompts')"><span class="learn-icon">✎</span><h3>Improve a prompt</h3><p>Experiment with clear instructions, context and constraints, then submit a question to your local RAG model.</p></button>
+      </div>
+    </section>
+
+    <section class="learn-section" id="guidedSection">
+      <h3>Watch an LLM answer</h3>
+      <p class="sub">This walkthrough reflects the RAG endpoint in your backend. Before you ask a question, it explains the steps; after a response, it fills in the retrieved-context details from the actual API response.</p>
+      <div class="pipeline" id="pipelineSteps">
+        <div class="pipeline-step"><div class="n">STEP 01</div><strong>Question</strong><span>The user's words become the input.</span></div>
+        <div class="pipeline-step"><div class="n">STEP 02</div><strong>Embedding</strong><span>Ollama converts the question into a numeric vector.</span></div>
+        <div class="pipeline-step"><div class="n">STEP 03</div><strong>Retrieval</strong><span>HNSW finds similar document-chunk vectors.</span></div>
+        <div class="pipeline-step"><div class="n">STEP 04</div><strong>Context</strong><span>Retrieved passages are added to the prompt.</span></div>
+        <div class="pipeline-step"><div class="n">STEP 05</div><strong>Generation</strong><span>The configured LLM generates a response.</span></div>
+      </div>
+      <div class="explain-box" id="pipelineExplanation">No question has been submitted from this walkthrough yet. Ask a question below to see the real context count, model name, embedding dimensions and retrieved passages returned by your backend.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn-p" style="width:auto" onclick="showWorkspace('lab');switchTab('rag');document.getElementById('ragQuestion').focus()">Ask a question in AI Lab →</button>
+        <button class="btn-s" style="width:auto" onclick="showWorkspace('lab');switchTab('docs')">Manage documents</button>
+      </div>
+    </section>
+
+    <section class="learn-section">
+      <h3>AI concepts, explained simply</h3>
+      <p class="sub">Choose a concept. Each explanation starts in plain English and includes a technical note.</p>
+      <div class="lesson-grid" id="lessonGrid">
+        <button class="lesson active" onclick="selectLesson('llm')"><strong>1. What is an LLM?</strong><span>How a model generates text</span></button>
+        <button class="lesson" onclick="selectLesson('tokens')"><strong>2. Tokens & context</strong><span>How text is processed</span></button>
+        <button class="lesson" onclick="selectLesson('embeddings')"><strong>3. Embeddings</strong><span>Meaning represented as numbers</span></button>
+        <button class="lesson" onclick="selectLesson('rag')"><strong>4. RAG</strong><span>Giving answers relevant context</span></button>
+        <button class="lesson" onclick="selectLesson('vectors')"><strong>5. Vector search</strong><span>Finding similar representations</span></button>
+        <button class="lesson" onclick="selectLesson('hallucinations')"><strong>6. Hallucinations</strong><span>Why answers need verification</span></button>
+        <button class="lesson" onclick="selectLesson('prompts')"><strong>7. Prompt design</strong><span>Instructions that shape outputs</span></button>
+        <button class="lesson" onclick="selectLesson('fine-tuning')"><strong>8. RAG vs fine-tuning</strong><span>Different ways to adapt AI</span></button>
+      </div>
+      <div class="lesson-detail" id="lessonDetail" aria-live="polite"></div>
+    </section>
+
+    <section class="learn-section">
+      <h3>Prompt playground</h3>
+      <p class="sub">Improve the clarity of a question and send it to the existing RAG API. This playground uses your indexed documents; it does not pretend to be a general-purpose model endpoint.</p>
+      <label for="promptQuestion" style="display:block;font-size:12px;margin-bottom:8px">Your question</label>
+      <textarea id="promptQuestion" rows="3" placeholder="Example: Explain Spring Boot using only the documents I saved. If the documents do not contain the answer, say what is missing."></textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn-s" style="width:auto" onclick="applyPromptTemplate()">Add evidence-focused instructions</button>
+        <button class="btn-p" style="width:auto" onclick="submitPlaygroundQuestion()">Ask my documents →</button>
+      </div>
+      <div class="learn-status" id="promptStatus">Tip: a good prompt states the task, gives relevant context and specifies how uncertainty should be handled.</div>
+    </section>
+
+    <section class="learn-section">
+      <h3>Hallucination & evidence lab</h3>
+      <p class="sub">A similarity score is not a truth score. Use the latest real RAG response to inspect evidence, not to assume the answer is guaranteed correct.</p>
+      <div id="evidenceLab" class="explain-box">Ask a question in the guided walkthrough or AI Lab. Retrieved passages and their distances will appear here for inspection.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn-s" style="width:auto" onclick="showWorkspace('lab');switchTab('rag')">Ask a test question</button>
+        <button class="btn-s" style="width:auto" onclick="showWorkspace('lab');switchTab('docs')">Review indexed documents</button>
+      </div>
+    </section>
+  </div>
+</section>
+
+<div class="layout" id="labWorkspace">
+
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left-panel">
+    <div>
+      <div class="sec">Query (Demo Vectors)</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <input type="text" id="qInput" placeholder="binary tree, sushi, basketball…" />
+        <button class="btn-p" onclick="runSearch()">⚡ SEARCH</button>
+      </div>
+    </div>
+    <div>
+      <div class="sec">Algorithm</div>
+      <div class="algo-row">
+        <div class="algo-btn on" data-algo="hnsw"      onclick="setAlgo(this)">HNSW</div>
+        <div class="algo-btn"   data-algo="kdtree"     onclick="setAlgo(this)">KD-TREE</div>
+        <div class="algo-btn"   data-algo="bruteforce" onclick="setAlgo(this)">BRUTE</div>
+      </div>
+    </div>
+    <div>
+      <div class="sec">Distance Metric</div>
+      <select id="metric">
+        <option value="cosine">Cosine Similarity</option>
+        <option value="euclidean">Euclidean Distance</option>
+        <option value="manhattan">Manhattan Distance</option>
+      </select>
+    </div>
+    <div>
+      <div class="sec">Top-K: <span id="kLabel">5</span></div>
+      <input type="range" id="kSlider" min="1" max="10" value="5"
+             oninput="document.getElementById('kLabel').textContent=this.value">
+    </div>
+    <div>
+      <div class="sec">Category Legend</div>
+      <div class="legend">
+        <div class="leg-row"><div class="dot" style="background:var(--cs);box-shadow:0 0 5px var(--cs)"></div>CS / Algorithms</div>
+        <div class="leg-row"><div class="dot" style="background:var(--math);box-shadow:0 0 5px var(--math)"></div>Mathematics</div>
+        <div class="leg-row"><div class="dot" style="background:var(--food);box-shadow:0 0 5px var(--food)"></div>Food &amp; Cooking</div>
+        <div class="leg-row"><div class="dot" style="background:var(--sports);box-shadow:0 0 5px var(--sports)"></div>Sports &amp; Games</div>
+        <div class="leg-row"><div class="dot" style="background:#2563eb;box-shadow:0 0 5px #2563eb"></div>Document chunks</div>
+        <div class="leg-row"><div class="dot" style="background:#00a878;box-shadow:0 0 5px #00a878"></div>Accepted evidence</div>
+      </div>
+    </div>
+    <div>
+      <div class="sec">Insert Demo Vector</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <input type="text" id="addMeta" placeholder="Description…" />
+        <select id="addCat">
+          <option value="cs">CS / Algorithms</option>
+          <option value="math">Mathematics</option>
+          <option value="food">Food &amp; Cooking</option>
+          <option value="sports">Sports &amp; Games</option>
+        </select>
+        <button class="btn-s" onclick="addVector()">+ INSERT</button>
+      </div>
+    </div>
+    <div>
+      <div class="sec">Benchmark</div>
+      <button class="btn-s" onclick="runBenchmark()">▶ COMPARE ALL ALGOS</button>
+    </div>
+  </div>
+
+  <!-- ══ CENTER: SCATTER PLOT ══ -->
+  <div class="center-panel"><canvas id="scatter" aria-label="Two-dimensional projection of stored vectors"></canvas><div style="position:absolute;left:14px;bottom:12px;max-width:360px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.94);font-size:10px;line-height:1.5;color:var(--muted)">Document chunks stay visible in blue. The question and document vectors are projected together into one 2D space; accepted evidence is highlighted in green.</div></div>
+
+  <!-- ══ RIGHT PANEL: TABS ══ -->
+  <div class="right-panel">
+    <div class="tabs">
+      <div class="tab on"  onclick="switchTab('search')">SEARCH</div>
+      <div class="tab"     onclick="switchTab('docs')">DOCUMENTS</div>
+      <div class="tab"     onclick="switchTab('rag')">ASK AI</div>
+    </div>
+
+    <!-- TAB: SEARCH -->
+    <div class="tab-content on" id="tab-search">
+      <div>
+        <div class="sec">Search Latency</div>
+        <div class="lat-big" id="latBig">—</div>
+        <div class="lat-sub" id="latSub">No query yet</div>
+      </div>
+      <div>
+        <div class="sec">Top Matches</div>
+        <div class="results" id="results">
+          <div style="color:var(--muted);font-size:11px">Run a search to see results…</div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Query Embedding (16D)</div>
+        <canvas id="vecCvs" height="76"></canvas>
+      </div>
+      <div id="benchSec" style="display:none">
+        <div class="sec">Algorithm Comparison</div>
+        <div class="bench" id="benchBars"></div>
+      </div>
+      <div>
+        <div class="sec">HNSW Graph Layers</div>
+        <div class="layers" id="layers">
+          <div style="color:var(--muted);font-size:11px">Loading…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DOCUMENTS -->
+    <div class="tab-content" id="tab-docs">
+      <div>
+        <div class="sec">Ollama Status</div>
+        <div class="ollama-status" id="ollamaStatus">Checking…</div>
+      </div>
+      <div>
+        <div class="sec">Insert Document</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <input type="text" id="docTitle" placeholder="Document title / topic…" />
+          <textarea id="docText" placeholder="Paste your notes, textbook excerpt, lecture content…&#10;&#10;Long text is automatically split into overlapping chunks and each chunk gets its own real embedding via Ollama's nomic-embed-text model."></textarea>
+          <button class="btn-g" id="insertDocBtn" onclick="insertDocument()">⚡ EMBED &amp; INSERT</button>
+          <div id="insertStatus" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Stored Documents (<span id="docCountLabel">0</span>)</div>
+        <div class="doc-list" id="docList">
+          <div style="color:var(--muted);font-size:11px">No documents yet. Insert some above.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ASK AI (RAG) -->
+    <div class="tab-content" id="tab-rag">
+      <div>
+        <div class="sec">Ask a Question</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <textarea id="ragQuestion" rows="3" placeholder="What is dynamic programming?&#10;Explain the main idea of HNSW.&#10;How does the recipe differ from…"></textarea>
+          <div style="display:flex;gap:6px">
+            <select id="ragK" style="width:auto;flex-shrink:0">
+              <option value="2">Top 2</option>
+              <option value="3" selected>Top 3</option>
+              <option value="5">Top 5</option>
+            </select>
+            <button class="btn-g" id="askBtn" onclick="askAI()" style="flex:1">🤖 ASK AI</button>
+          </div>
+          <div style="font-size:10px;color:var(--muted)">Uses your inserted documents as context. Answers come from the local LLM.</div>
+        </div>
+      </div>
+      <div>
+        <div class="sec">Conversation</div>
+        <div class="chat-history" id="chatHistory">
+          <div style="color:var(--muted);font-size:11px">Ask a question about your inserted documents…</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end right-panel -->
+</div><!-- end layout -->
+
+<div id="tip"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════════════════
+const API  = '/api/v1';
+const DIMS = 16;
+const COL  = { cs:'#00d9ff', math:'#b388ff', food:'#ffb74d', sports:'#69f0ae', doc:'#a6e3a1', default:'#90a4ae' };
+const DIM_COL = ['#00d9ff','#00d9ff','#00d9ff','#00d9ff','#b388ff','#b388ff','#b388ff','#b388ff',
+                 '#ffb74d','#ffb74d','#ffb74d','#ffb74d','#69f0ae','#69f0ae','#69f0ae','#69f0ae'];
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+let allItems = [], pcaPoints = [], hitIds = new Set(), queryPt = null;
+let hoverItem = null, pulse = 0, selAlgo = 'hnsw', searchResults = [];
+
+// ════════════════════════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['search','docs','rag'];
+    t.classList.toggle('on', names[i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('on'));
+  document.getElementById('tab-' + name).classList.add('on');
+  if (name === 'docs') loadDocList();
+}
+
+function showWorkspace(name) {
+  const learn = name === 'learn';
+  document.getElementById('learnWorkspace').style.display = learn ? 'block' : 'none';
+  document.getElementById('labWorkspace').style.display = learn ? 'none' : 'flex';
+  document.getElementById('learnNav').classList.toggle('active', learn);
+  document.getElementById('labNav').classList.toggle('active', !learn);
+  if (!learn) requestAnimationFrame(resize);
+}
+
+const LESSONS = {
+  llm: {title:'What is an LLM?', plain:'A large language model (LLM) is a model trained on large amounts of text to predict and generate sequences of tokens. It can produce useful explanations, but fluent text is not proof that a claim is true.', technical:'Technical view: modern LLMs commonly use transformer architectures and generate tokens autoregressively. VectorCraft calls the configured Ollama generation model from RagService.'},
+  tokens: {title:'Tokens and context windows', plain:'A token is a piece of text the model processes. It may be a word, part of a word, punctuation or another unit. The context window limits how much input and conversation the model can consider at once.', technical:'Technical view: tokenization is model-specific. This project sends a prompt containing retrieved chunks to Ollama; this UI does not claim to know the exact token count unless the backend exposes it.'},
+  embeddings: {title:'Embeddings', plain:'An embedding is a list of numbers that represents text in a learned space. Text with related meaning may have nearby vectors, depending on the embedding model and the distance metric.', technical:'Technical view: this backend generates document and query embeddings with the configured Ollama embedding model. The 2D plot is a projection of high-dimensional vectors and can distort distances.'},
+  rag: {title:'Retrieval-Augmented Generation (RAG)', plain:'RAG first finds relevant passages from your documents, then gives those passages to an LLM alongside your question. It helps the model use your own material without retraining the model.', technical:'Technical view: RagService embeds the question, calls DocumentService search, builds a context prompt and calls Ollama generation. The response returns queryEmbedding and retrieved contexts.'},
+  vectors: {title:'Vector search', plain:'Vector search ranks stored vectors by a selected mathematical distance or similarity. The best match depends on the embedding model, the metric and the data in the index.', technical:'Technical view: VectorCraft exposes HNSW, KD_TREE and BRUTE_FORCE for the manual vector index. Document retrieval currently uses the document vector store configured in the backend.'},
+  hallucinations: {title:'Hallucinations and evidence', plain:'An LLM can state something confidently even when it is wrong or unsupported. Retrieved passages are useful evidence, but the model may misread them or add unsupported details. Always verify important claims.', technical:'Technical view: inspect the retrieved chunk text and distances. A distance is a ranking signal, not a calibrated probability of correctness. The current backend has a context-grounded RAG endpoint, not a separate no-context comparison endpoint.'},
+  prompts: {title:'Prompt design', plain:'A clearer prompt says what you want, provides useful context and sets constraints. For example, ask for a short explanation and tell the model to identify missing evidence instead of guessing.', technical:'Technical view: this playground submits your prompt to POST /api/v1/rag/ask. It does not call a separate generic chat endpoint or modify the backend prompt template.'},
+  'fine-tuning': {title:'RAG versus fine-tuning', plain:'RAG gives a model relevant information at question time. Fine-tuning changes model behavior by training it further. Use RAG when answers need to reference changing or private documents; consider fine-tuning for consistent behavior or specialized formats.', technical:'Technical view: this project implements retrieval-augmented generation. It does not fine-tune model weights.'}
+};
+function selectLesson(key) {
+  const lesson = LESSONS[key] || LESSONS.llm;
+  document.querySelectorAll('.lesson').forEach(el => el.classList.toggle('active', el.getAttribute('onclick') === "selectLesson('"+key+"')"));
+  document.getElementById('lessonDetail').innerHTML = '<strong>'+escapeHtml(lesson.title)+'</strong><p style="margin-top:8px">'+escapeHtml(lesson.plain)+'</p><p style="margin-top:10px;color:#1d4ed8"><strong>Technical view:</strong> '+escapeHtml(lesson.technical)+'</p>';
+  document.querySelector('.lesson-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function startGuidedTour() {
+  showWorkspace('learn');
+  document.getElementById('guidedSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function applyPromptTemplate() {
+  const input = document.getElementById('promptQuestion');
+  const base = input.value.trim();
+  if (!base) { input.value = 'Explain the main idea using my saved documents.'; }
+  else if (!/evidence|document|context|source/i.test(base)) input.value = base + '\n\nUse only relevant information from my saved documents. If the documents do not support an answer, clearly say what is missing. Do not invent sources.';
+  document.getElementById('promptStatus').textContent = 'Evidence-focused instructions added. Submit it to test against your indexed documents.';
+}
+function submitPlaygroundQuestion() {
+  const q = document.getElementById('promptQuestion').value.trim();
+  if (!q) { document.getElementById('promptStatus').textContent = 'Enter a question first.'; return; }
+  document.getElementById('ragQuestion').value = q;
+  document.getElementById('promptStatus').textContent = 'Question submitted to the existing RAG API. Results will appear in AI Lab and update the evidence walkthrough.';
+  showWorkspace('lab'); switchTab('rag'); askAI();
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+// ════════════════════════════════════════════════════════════
+//  TEXT → 16-D EMBEDDING (for demo vectors)
+// ════════════════════════════════════════════════════════════
+const KW = {
+  cs:     ['algorithm','data','tree','graph','array','linked','hash','stack','queue','sort','binary','dynamic','programming','recursion','complexity','pointer','node','search','insert','bfs','dfs','heap','trie'],
+  math:   ['calculus','matrix','probability','theorem','integral','derivative','linear','algebra','equation','function','prime','modular','combinatorics','permutation','eigenvalue','statistics','proof'],
+  food:   ['food','pizza','sushi','ramen','pasta','recipe','cook','eat','restaurant','dish','ingredient','flavor','spice','noodle','bread','croissant','taco','fish','rice','soup'],
+  sports: ['sport','basketball','football','tennis','chess','swim','game','play','score','team','athlete','competition','match','tournament','olympic','dribble','tackle','serve']
+};
+
+function textToEmbedding(text) {
+  const t = text.toLowerCase(), ws = t.split(/\s+/);
+  const s = {cs:0,math:0,food:0,sports:0};
+  for (const w of ws)
+    for (const [cat, kws] of Object.entries(KW))
+      for (const kw of kws) if (w.includes(kw)||kw.startsWith(w)) { s[cat]+=0.35; break; }
+  const mx = Math.max(...Object.values(s), 0.01);
+  const n = v => Math.min(v/mx*0.88, 0.94);
+  const jitter = () => (Math.random()-.5)*.04;
+  const emb = new Array(16).fill(0.08);
+  const fill = (i,score) => {
+    if (score<.01) return;
+    const b = n(score);
+    emb[i]=Math.max(.05,b+jitter()); emb[i+1]=Math.max(.05,b+jitter());
+    emb[i+2]=Math.max(.05,b*.92+jitter()); emb[i+3]=Math.max(.05,b*.87+jitter());
+  };
+  fill(0,s.cs); fill(4,s.math); fill(8,s.food); fill(12,s.sports);
+  return emb;
+}
+
+// ════════════════════════════════════════════════════════════
+//  PCA
+// ════════════════════════════════════════════════════════════
+function pca2D(embs) {
+  const n = embs.length, d = embs[0].length;
+  if (n < 2) return embs.map(() => [0,0]);
+  const mean = new Array(d).fill(0);
+  for (const e of embs) for (let i=0;i<d;i++) mean[i]+=e[i]/n;
+  const X = embs.map(e => e.map((v,i)=>v-mean[i]));
+  function powerIter(X,excl) {
+    let v = new Array(d).fill(0).map(()=>Math.random()-.5);
+    if (excl) { let dot=v.reduce((s,vi,i)=>s+vi*excl[i],0); v=v.map((vi,i)=>vi-dot*excl[i]); }
+    let nrm = Math.sqrt(v.reduce((s,vi)=>s+vi*vi,0));
+    v = v.map(vi=>vi/nrm);
+    for (let it=0;it<200;it++) {
+      const Xv=X.map(xi=>xi.reduce((s,xij,j)=>s+xij*v[j],0));
+      const nv=new Array(d).fill(0);
+      for (let k=0;k<n;k++) for (let j=0;j<d;j++) nv[j]+=X[k][j]*Xv[k];
+      if (excl) { let dot=nv.reduce((s,vi,i)=>s+vi*excl[i],0); for (let i=0;i<d;i++) nv[i]-=dot*excl[i]; }
+      nrm=Math.sqrt(nv.reduce((s,vi)=>s+vi*vi,0));
+      if (nrm<1e-10) break;
+      const prev=v.slice(); v=nv.map(vi=>vi/nrm);
+      if (v.reduce((s,vi,i)=>s+(vi-prev[i])**2,0)<1e-12) break;
+    }
+    return v;
+  }
+  const pc1=powerIter(X,null), pc2=powerIter(X,pc1);
+  return X.map(x=>[x.reduce((s,v,i)=>s+v*pc1[i],0),x.reduce((s,v,i)=>s+v*pc2[i],0)]);
+}
+
+// ════════════════════════════════════════════════════════════
+//  SCATTER PLOT
+// ════════════════════════════════════════════════════════════
+const sc=document.getElementById('scatter'), ctx=sc.getContext('2d');
+let bounds={minX:-1,maxX:1,minY:-1,maxY:1};
+
+function resize() { const r=sc.parentElement.getBoundingClientRect(); sc.width=r.width; sc.height=r.height; }
+window.addEventListener('resize', resize);
+
+function w2c(wx,wy) {
+  const P=70,W=sc.width,H=sc.height,rx=bounds.maxX-bounds.minX||1,ry=bounds.maxY-bounds.minY||1;
+  return [P+((wx-bounds.minX)/rx)*(W-2*P), H-P-((wy-bounds.minY)/ry)*(H-2*P)];
+}
+
+function drawFrame() {
+  ctx.clearRect(0,0,sc.width,sc.height);
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,sc.width,sc.height);
+  ctx.strokeStyle='#e8eef7'; ctx.lineWidth=1;
+  for (let i=0;i<=8;i++) {
+    const tx=70+(i/8)*(sc.width-140),ty=70+(i/8)*(sc.height-140);
+    ctx.beginPath();ctx.moveTo(tx,70);ctx.lineTo(tx,sc.height-70);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(70,ty);ctx.lineTo(sc.width-70,ty);ctx.stroke();
+  }
+  ctx.fillStyle='#64748b'; ctx.font='11px Fira Code,monospace';
+  ctx.fillText('PC₁ →',sc.width/2-40,sc.height-18);
+  ctx.save();ctx.translate(18,sc.height/2+50);ctx.rotate(-Math.PI/2);ctx.fillText('PC₂ →',0,0);ctx.restore();
+  ctx.fillStyle='#334155'; ctx.font='12px Fira Code,monospace';
+  ctx.fillText('2D PCA Projection  ·  Semantic Space',80,28);
+
+  if (queryPt && hitIds.size>0) {
+    const [qx,qy]=w2c(queryPt.x,queryPt.y);
+    for (const pt of pcaPoints) {
+      if (!hitIds.has(pt.item.id)) continue;
+      const [px,py]=w2c(pt.x,pt.y);
+      ctx.strokeStyle='rgba(37,99,235,0.25)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+      ctx.beginPath();ctx.moveTo(qx,qy);ctx.lineTo(px,py);ctx.stroke();
+      ctx.setLineDash([]);
+      const angle=Math.atan2(py-qy,px-qx), ax=px-Math.cos(angle)*14, ay=py-Math.sin(angle)*14;
+      ctx.fillStyle='#00a878';
+      ctx.beginPath();
+      ctx.moveTo(ax,ay);
+      ctx.lineTo(ax-Math.cos(angle-.55)*8,ay-Math.sin(angle-.55)*8);
+      ctx.lineTo(ax-Math.cos(angle+.55)*8,ay-Math.sin(angle+.55)*8);
+      ctx.closePath();ctx.fill();
+    }
+  }
+  for (const pt of pcaPoints) {
+    const [cx,cy]=w2c(pt.x,pt.y);
+    const isHit=hitIds.has(pt.item.id), r=isHit?10:7;
+    const col=plotMode === 'documents' ? (isHit ? '#00a878' : '#2563eb') : (COL[pt.item.category]||COL.default);
+    if (isHit) {
+      const pr=r+7+Math.sin(pulse)*3.5;
+      ctx.beginPath();ctx.arc(cx,cy,pr,0,2*Math.PI);
+      ctx.strokeStyle=col+'55';ctx.lineWidth=1.5;ctx.stroke();
+    }
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r*3);
+    grd.addColorStop(0,col+(isHit?'bb':'88'));grd.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(cx,cy,r*3,0,2*Math.PI);ctx.fillStyle=grd;ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.fillStyle=col;ctx.fill();
+    if (hoverItem&&hoverItem.id===pt.item.id) {
+      ctx.beginPath();ctx.arc(cx,cy,r+5,0,2*Math.PI);ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.stroke();
+    }
+  }
+  if (queryPt) {
+    const [qx,qy]=w2c(queryPt.x,queryPt.y);
+    ctx.save();ctx.translate(qx,qy);
+    ctx.shadowColor='rgba(124,58,237,.35)';ctx.shadowBlur=18;
+    ctx.beginPath();
+    for (let i=0;i<4;i++){const a=(i*Math.PI/2)-Math.PI/4,rr=12;if(i===0)ctx.moveTo(Math.cos(a)*rr,Math.sin(a)*rr);else ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}
+    ctx.closePath();ctx.fillStyle='#fff';ctx.fill();
+    ctx.shadowBlur=0;ctx.strokeStyle='#7c3aed';ctx.lineWidth=2;ctx.stroke();ctx.restore();
+    ctx.fillStyle='#7c3aed';ctx.font='10px Fira Code,monospace';ctx.fillText('query',qx+16,qy+4);
+  }
+  if (!pcaPoints.length) {
+    ctx.fillStyle='#64748b';ctx.font='13px Fira Code,monospace';ctx.textAlign='center';
+    ctx.fillText('Add vectors or index a document to explore this space',sc.width/2,sc.height/2);ctx.textAlign='left';
+  }
+  pulse+=0.05;
+  requestAnimationFrame(drawFrame);
+}
+
+sc.addEventListener('mousemove', e => {
+  const rect=sc.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  hoverItem=null; let best=18;
+  for (const pt of pcaPoints) {
+    const [cx,cy]=w2c(pt.x,pt.y),d=Math.hypot(mx-cx,my-cy);
+    if (d<best){best=d;hoverItem=pt.item;}
+  }
+  const tip=document.getElementById('tip');
+  if (hoverItem) {
+    const isDocument=plotMode === 'documents' || hoverItem.category === 'document';
+    const col=isDocument ? '#2563eb' : (COL[hoverItem.category]||COL.default);
+    const documentId=Number(hoverItem.label);
+    const name=isDocument ? (documentTitles[documentId] || 'Document') : (hoverItem.label || 'Vector');
+    const chunk=isDocument && hoverItem.metadata && hoverItem.metadata.chunkIndex !== undefined
+      ? `<br>Chunk ${escapeHtml(hoverItem.metadata.chunkIndex)}` : '';
+    tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY-8)+'px';
+    tip.innerHTML=`<span style="color:${col}">[${isDocument ? 'document chunk' : escapeHtml(hoverItem.category || 'vector')}]</span><br>${escapeHtml(name)}${chunk}`;
+  } else tip.style.display='none';
+});
+sc.addEventListener('mouseleave',()=>{hoverItem=null;document.getElementById('tip').style.display='none';});
+
+// ════════════════════════════════════════════════════════════
+//  LOAD DEMO ITEMS
+// ════════════════════════════════════════════════════════════
+let manualItems = [], documentItems = [], documentTitles = {}, plotMode = 'manual', lastQueryEmbedding = null;
+function choosePlotItems(mode, queryEmbedding = null) {
+  plotMode = mode;
+  const source = mode === 'documents' ? documentItems : manualItems;
+  const valid = source.filter(item => Array.isArray(item.values) && item.values.length);
+  const compatibleQuery = queryEmbedding && valid.length && queryEmbedding.length === valid[0].values.length ? queryEmbedding : null;
+  const vectorsForProjection = valid.map(item => item.values);
+  if (compatibleQuery) vectorsForProjection.push(queryEmbedding);
+  if (vectorsForProjection.length >= 2) {
+    const coords = pca2D(vectorsForProjection);
+    pcaPoints = valid.map((item,i)=>({x:coords[i][0],y:coords[i][1],item}));
+    queryPt = compatibleQuery ? {x:coords[coords.length-1][0],y:coords[coords.length-1][1]} : null;
+    let x0=Math.min(...coords.map(c=>c[0])),x1=Math.max(...coords.map(c=>c[0]));
+    let y0=Math.min(...coords.map(c=>c[1])),y1=Math.max(...coords.map(c=>c[1]));
+    const px=(x1-x0)*.18||.1,py=(y1-y0)*.18||.1;
+    bounds={minX:x0-px,maxX:x1+px,minY:y0-py,maxY:y1+py};
+  } else {
+    pcaPoints = valid.map((item,i)=>({x:i,y:0,item}));
+    queryPt = null;
+    bounds={minX:-1,maxX:Math.max(1,valid.length),minY:-1,maxY:1};
+  }
+  hitIds = new Set();
+  document.getElementById('statsLabel').textContent = mode === 'documents'
+    ? `${documentItems.length} document vectors · ${documentItems[0]?.values?.length || '—'} dims`
+    : `${manualItems.length} playground vectors · ${manualItems[0]?.values?.length || DIMS} dims`;
+}
+async function loadItems() {
+  try {
+    const [manualResponse, documentResponse] = await Promise.all([
+      fetch(API+'/vectors'),
+      fetch(API+'/documents/vectors')
+    ]);
+    if (!manualResponse.ok) throw new Error('Could not load manual vectors');
+    manualItems = await manualResponse.json();
+    documentItems = documentResponse.ok ? await documentResponse.json() : [];
+    allItems = [...manualItems, ...documentItems];
+    choosePlotItems(plotMode, lastQueryEmbedding);
+  } catch(e) {
+    document.getElementById('statsLabel').textContent = 'API unavailable';
+    console.error('Unable to load vectors:', e);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  DEMO SEARCH
+// ════════════════════════════════════════════════════════════
+function setAlgo(el) {
+  document.querySelectorAll('.algo-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on'); selAlgo=el.dataset.algo;
+}
+
+async function runSearch() {
+  const text=document.getElementById('qInput').value.trim(); if(!text)return;
+  const emb=textToEmbedding(text),k=parseInt(document.getElementById('kSlider').value);
+  const metric=document.getElementById('metric').value;
+  choosePlotItems('manual'); lastQueryEmbedding = null;
+  try {
+    const r=await fetch(API+'/vectors/search',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        query:emb,
+        k,
+        metric:metric.toUpperCase(),
+        algorithm:{hnsw:'HNSW',kdtree:'KD_TREE',bruteforce:'BRUTE_FORCE'}[selAlgo]
+      })
+    });
+    if (!r.ok) throw new Error('Search failed');
+    searchResults=await r.json(); hitIds=new Set(searchResults.map(r=>r.id));
+    document.getElementById('latBig').textContent='—';
+    document.getElementById('latSub').textContent=selAlgo.toUpperCase()+'  ·  '+metric+'  ·  k='+k;
+    if (searchResults.length>0){
+      // Demo search uses illustrative client-side embeddings; mark the nearest result cluster,
+      // but do not label a weighted average as the actual query embedding.
+      queryPt = null;
+    }
+    renderResults(searchResults); drawVecChart(emb);
+  } catch(e){alert('Search failed: '+e.message+'\nCheck the backend and ensure vectors use the expected 16 dimensions.');}
+}
+
+document.getElementById('qInput').addEventListener('keydown',e=>{if(e.key==='Enter')runSearch();});
+
+function renderResults(results) {
+  if (!results||!results.length){document.getElementById('results').innerHTML='<div style="color:var(--muted);font-size:11px">No results</div>';return;}
+  document.getElementById('results').innerHTML=results.map((r,i)=>{
+    const col=COL[r.category]||COL.default;
+    return `<div class="rcard" onmouseenter="hoverItem={id:${r.id}}" onmouseleave="hoverItem=null">
+      <div class="rrank">#${i+1} NEAREST</div>
+      <div class="rmeta">${escapeHtml(r.label || (r.metadata ? Object.entries(r.metadata).map(([k,v])=>k+'='+v).join(' · ') : ''))}</div>
+      <div class="rfoot">
+        <span class="rcat" style="background:${col}18;color:${col};border:1px solid ${col}44">${r.category.toUpperCase()}</span>
+        <span class="rdist">dist: ${r.distance.toFixed(5)}</span>
+        <button class="del" onclick="deleteItem(${r.id})">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function drawVecChart(emb) {
+  const vc=document.getElementById('vecCvs'),W=vc.parentElement.clientWidth;
+  vc.width=W;const vx=vc.getContext('2d');
+  vx.clearRect(0,0,W,76);vx.fillStyle='#ffffff';vx.fillRect(0,0,W,76);
+  const bw=(W-4)/DIMS;
+  for (let i=0;i<DIMS;i++){
+    const h=emb[i]*58,x=2+i*bw,col=DIM_COL[i];
+    vx.shadowColor=col;vx.shadowBlur=5;vx.fillStyle=col+'aa';vx.fillRect(x+1,63-h,bw-2,h);
+  }
+  vx.shadowBlur=0;vx.font='8px monospace';vx.textAlign='center';
+  [['CS',0],['MATH',4],['FOOD',8],['SPORT',12]].forEach(([lbl,gi],i)=>{
+    vx.fillStyle=Object.values(COL)[i]+'77';vx.fillText(lbl,2+(gi+1.5)*bw,74);
+  });
+  vx.textAlign='left';
+}
+
+async function runBenchmark() {
+  const text=document.getElementById('qInput').value.trim()||'binary tree algorithm';
+  const emb=textToEmbedding(text),metric=document.getElementById('metric').value;
+  try {
+    const r=await fetch(API+'/vectors/benchmark');
+    const d=await r.json();
+    document.getElementById('benchSec').style.display='block';
+
+    const rows=[
+      {lbl:'Brute Force',us:Number(d.BRUTE_FORCE?.latencyMicros ?? 0),col:'#f38ba8'},
+      {lbl:'KD-Tree',us:Number(d.KD_TREE?.latencyMicros ?? 0),col:'#89dceb'},
+      {lbl:'HNSW',us:Number(d.HNSW?.latencyMicros ?? 0),col:'#b388ff'}
+    ];
+    const mx=Math.max(...rows.map(x=>x.us),1);
+    document.getElementById('benchBars').innerHTML=rows.map(({lbl,us,col})=>{
+      const pct=Math.max((us/mx)*100,2),disp=us<1000?us+' μs':(us/1000).toFixed(2)+' ms';
+      return `<div class="brow"><div class="blabel"><span style="color:${col}">${lbl}</span><span style="color:var(--muted)">${disp}</span></div><div class="btrack"><div class="bfill" style="width:${pct}%;background:${col}"></div></div></div>`;
+    }).join('');
+  } catch(e) { document.getElementById('benchBars').textContent='Benchmark failed: '+e.message; document.getElementById('benchSec').style.display='block'; }
+}
+
+async function loadHNSW() {
+  document.getElementById('layers').innerHTML='<div style="color:var(--muted);font-size:11px">Graph details are not exposed by the API.</div>';
+}
+
+async function addVector() {
+  const meta=document.getElementById('addMeta').value.trim(),cat=document.getElementById('addCat').value;
+  if(!meta){alert('Enter a description before inserting a demo vector.');return;}
+  const emb=textToEmbedding(meta+' '+cat);
+  try {
+    const r=await fetch(API+'/vectors',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({label:meta,category:cat,values:emb,metadata:{}})
+    });
+    if (!r.ok) throw new Error('Insert failed');
+    document.getElementById('addMeta').value='';
+    await loadItems();loadHNSW();
+  } catch(e) { alert('Could not insert demo vector: '+e.message); }
+}
+
+async function deleteItem(id) {
+  try {
+    const r=await fetch(`${API}/vectors/${id}`,{method:'DELETE'});
+    if (!r.ok) throw new Error('Delete failed');
+    searchResults=searchResults.filter(r=>r.id!==id);hitIds.delete(id);
+    renderResults(searchResults);await loadItems();loadHNSW();
+  } catch(e) { alert('Could not delete vector: '+e.message); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  DOCUMENT MANAGEMENT
+// ════════════════════════════════════════════════════════════
+async function checkOllamaStatus() {
+  try {
+    const r=await fetch(API+'/status'), d=await r.json();
+    const badge=document.getElementById('ollamaBadge');
+    const box=document.getElementById('ollamaStatus');
+    if (r.ok) {
+      badge.className='badge ok'; badge.textContent='BACKEND ✓';
+      box.className='ollama-status ok';
+      box.innerHTML=`<span style="color:var(--green)">● Backend reachable</span><br>`+
+        `Backend reachable · document chunks: <span style="color:var(--text)">${d.documentChunks ?? 0}</span>`;
+    } else {
+      badge.className='badge err'; badge.textContent='BACKEND ✗';
+      box.className='ollama-status err';
+      box.innerHTML=`<span style="color:var(--red)">● Offline</span><br><br>`+
+        `The backend is unavailable. To enable RAG features:<br>`+
+        `<span style="color:var(--muted)">1. Start the application<br>`+
+        `2. ollama pull nomic-embed-text<br>`+
+        `3. ollama pull llama3.2</span>`;
+    }
+  } catch(_) {}
+}
+
+async function insertDocument() {
+  const title=document.getElementById('docTitle').value.trim();
+  const text=document.getElementById('docText').value.trim();
+  const btn=document.getElementById('insertDocBtn');
+  const status=document.getElementById('insertStatus');
+  if(!title||!text){status.textContent='⚠ Need both a title and text.';return;}
+
+  btn.disabled=true; btn.textContent='Embedding…';
+  status.innerHTML='<span style="color:var(--muted)">Calling Ollama nomic-embed-text…</span>';
+
+  try {
+    const r=await fetch(API+'/documents',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({title,text})
+    });
+    if (!r.ok) throw new Error('Document insert failed');
+    const d=await r.json();
+    if (d.error) {
+      status.innerHTML=`<span style="color:var(--red)">✗ ${d.error}</span>`;
+    } else {
+      status.innerHTML=`<span style="color:var(--green)">✓ Inserted ${d.chunks} chunk(s)</span>`;
+      document.getElementById('docTitle').value='';
+      document.getElementById('docText').value='';
+      loadItems();
+      loadDocList(); checkOllamaStatus();
+    }
+  } catch(e) {
+    status.innerHTML='<span style="color:var(--red)">✗ '+escapeHtml(e.message || 'Server error')+'</span>';
+  }
+  btn.disabled=false; btn.textContent='⚡ EMBED & INSERT';
+}
+
+async function loadDocList() {
+  try {
+    const r=await fetch(API+'/documents'), docs=await r.json();
+    documentTitles=Object.fromEntries(docs.map(d=>[d.id,d.title]));
+    document.getElementById('docCountLabel').textContent=docs.length;
+    if (!docs.length) {
+      document.getElementById('docList').innerHTML='<div style="color:var(--muted);font-size:11px">No documents yet.</div>';
+      return;
+    }
+    document.getElementById('docList').innerHTML=docs.map(d=>`
+      <div class="dcard">
+        <div class="dcard-title">${escapeHtml(d.title)}</div>
+        <div class="dcard-preview">Document #${d.id} · ${d.chunks} chunk(s)</div>
+        <div class="dcard-foot">
+          <span class="dcard-words">${d.chunks} chunks</span>
+          <button class="del" onclick="deleteDoc(${d.id})">✕</button>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.error('Document list failed:', e); }
+}
+
+async function deleteDoc(id) {
+  try {
+    const r=await fetch(`${API}/documents/${id}`,{method:'DELETE'});
+    if (!r.ok) throw new Error('Delete failed');
+    await loadDocList(); await checkOllamaStatus(); await loadItems();
+  } catch(e) { alert('Could not delete document: '+e.message); }
+}
+
+// ════════════════════════════════════════════════════════════
+//  RAG  — Ask AI
+// ════════════════════════════════════════════════════════════
+document.getElementById('ragQuestion').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.ctrlKey)askAI();
+});
+
+async function askAI() {
+  const question=document.getElementById('ragQuestion').value.trim();
+  if(!question)return;
+  const k=parseInt(document.getElementById('ragK').value);
+  const btn=document.getElementById('askBtn');
+  btn.disabled=true; btn.textContent='Thinking…';
+
+  const history=document.getElementById('chatHistory');
+  // Clear previous conversation
+  history.innerHTML='';
+
+  // Show question bubble
+  const qDiv=document.createElement('div'); qDiv.className='chat-q';
+  qDiv.textContent=question; history.appendChild(qDiv);
+
+  // Show thinking indicator
+  const thinkDiv=document.createElement('div'); thinkDiv.className='thinking';
+  thinkDiv.innerHTML='<div class="spinner"></div>Retrieving context & generating answer…';
+  history.appendChild(thinkDiv);
+  history.scrollTop=history.scrollHeight;
+
+  // The Java backend performs retrieval + generation in one /rag/ask request.
+
+  try {
+    const r=await fetch(API+'/rag/ask',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question,k})
+    });
+    if (!r.ok) {
+      const body = await r.text();
+      throw new Error(body || `Request failed (${r.status})`);
+    }
+    const d=await r.json();
+    thinkDiv.remove();
+    const contexts = Array.isArray(d.contexts) ? d.contexts : [];
+    if (Array.isArray(d.queryEmbedding) && d.queryEmbedding.length) {
+      lastQueryEmbedding = d.queryEmbedding;
+      choosePlotItems('documents', d.queryEmbedding);
+      hitIds = new Set(contexts.map(c => -Number(c.vectorId ?? c.chunkId)).filter(Number.isFinite));
+    } else {
+      lastQueryEmbedding = null;
+      choosePlotItems('documents');
+      hitIds = new Set(contexts.map(c => -Number(c.vectorId ?? c.chunkId)).filter(Number.isFinite));
+    }
+
+    const aDiv=document.createElement('div'); aDiv.className='chat-a';
+    if (!d.answer) {
+      aDiv.innerHTML='<div class="chat-a-label">NO ANSWER</div><div class="chat-a-text">The backend returned no answer text. Check the application logs and Ollama model.</div>';
+      history.appendChild(aDiv);
+    } else {
+      const contextHtml = contexts.map((c,i)=>`<span class="ctx-chip" onclick="toggleCtx(${i})">#${i+1} ${escapeHtml(c.title || 'Document')} · ${Number(c.distance ?? 0).toFixed(3)}</span><div class="ctx-expand" id="ctx-${i}">${escapeHtml(c.content || '')}</div>`).join('');
+      aDiv.innerHTML=`<div class="chat-a-label">🤖 ${escapeHtml(d.model||'LLM')}</div>`+
+        `<div class="chat-a-text" id="typeTarget"></div>`+
+        `<div class="chat-ctx">`+
+          `<div class="chat-ctx-label">RETRIEVED CONTEXT (${contexts.length} chunks)</div>`+
+          (contextHtml || '<div class="learn-status">No sufficiently relevant documents found.</div>')+
+        `</div>`;
+      history.appendChild(aDiv);
+      const target=aDiv.querySelector('#typeTarget');
+      target.classList.add('typing');
+      const full=String(d.answer); let i=0;
+      const timer=setInterval(()=>{
+        if(i>=full.length){clearInterval(timer);target.classList.remove('typing');return;}
+        const chunk=full.slice(i,i+3); target.textContent+=chunk; i+=3;
+        history.scrollTop=history.scrollHeight;
+      },12);
+    }
+    updateLearningFromRag(question, d, contexts);
+  } catch(e) {
+    thinkDiv.remove();
+    const err=document.createElement('div');err.className='chat-a';
+    err.innerHTML='<div class="chat-a-label">REQUEST FAILED</div><div class="chat-a-text" style="color:var(--red)">'+escapeHtml(e.message || 'Server error — is the backend running?')+'</div>';
+    history.appendChild(err);
+    document.getElementById('pipelineExplanation').textContent = 'The request did not complete. Check that Spring Boot, PostgreSQL and Ollama are available, and that the configured models are installed.';
+  }
+
+  btn.disabled=false; btn.textContent='🤖 ASK AI';
+  history.scrollTop=history.scrollHeight;
+}
+function updateLearningFromRag(question, response, contexts) {
+  const embeddingLength = Array.isArray(response.queryEmbedding) ? response.queryEmbedding.length : 0;
+  const model = response.model || 'configured model';
+  const pipeline = document.getElementById('pipelineSteps');
+  [...pipeline.children].forEach((node, index) => {
+    node.classList.toggle('done', index === 0 || index === 1 && embeddingLength > 0 || index === 2 && contexts.length > 0 || index === 3 && contexts.length > 0 || index === 4 && Boolean(response.answer));
+  });
+  document.getElementById('pipelineExplanation').innerHTML =
+    '<strong>Latest run</strong><br>' +
+    '<strong>Question:</strong> ' + escapeHtml(question) + '<br>' +
+    '<strong>Embedding:</strong> ' + (embeddingLength ? embeddingLength + ' dimensions returned by backend' : 'not included in response') + '<br>' +
+    '<strong>Retrieved context:</strong> ' + contexts.length + ' chunk(s)' + '<br>' +
+    '<strong>Generation model:</strong> ' + escapeHtml(model) + '<br>' +
+    '<strong>Important:</strong> these steps describe the backend request/response, not a trace of the LLM’s private internal reasoning.';
+  const evidence = document.getElementById('evidenceLab');
+  if (!contexts.length) {
+    evidence.innerHTML = '<strong>No sufficiently relevant documents found.</strong><p style="margin-top:6px">The stored document chunks remain visible in blue, but none passed the backend relevance threshold and no supporting evidence was used.</p>';
+  } else {
+    evidence.innerHTML = '<strong>Retrieved evidence ('+contexts.length+' passages)</strong><p style="margin:6px 0 10px">Open each passage in the AI Lab conversation to inspect its content. Distances rank matches; they are not confidence percentages.</p>' +
+      contexts.map((c,i)=>'<div style="border-top:1px solid #dce5f3;padding:9px 0"><strong>'+ (i+1)+'. '+escapeHtml(c.title || 'Document')+'</strong><div style="color:#61738f;font-size:12px;margin-top:4px">Chunk '+escapeHtml(c.chunkIndex ?? '—')+' · distance '+Number(c.distance ?? 0).toFixed(4)+'</div><p style="margin-top:6px">'+escapeHtml(c.content || '')+'</p></div>').join('');
+  }
+}
+
+function toggleCtx(i) {
+  const el=document.getElementById('ctx-'+i);
+  el.style.display=el.style.display==='block'?'none':'block';
+}
+
+// ════════════════════════════════════════════════════════════
+//  BOOT
+// ════════════════════════════════════════════════════════════
+resize(); drawFrame();
+selectLesson('llm');
+loadItems().then(loadHNSW);
+checkOllamaStatus();
+loadDocList();
+</script>
+</body>
+</html>
