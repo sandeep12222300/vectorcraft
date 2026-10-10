@@ -2,13 +2,20 @@
 
 # VectorCraft
 
+<p align="center">
+  <img alt="VectorCraft" src="https://img.shields.io/badge/VectorCraft-Local%20RAG%20Lab-6C5CE7?style=for-the-badge" />
+  <img alt="Java 21" src="https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" />
+  <img alt="Spring Boot" src="https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" />
+  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-Local%20LLMs-000000?style=for-the-badge&logo=ollama&logoColor=white" />
+</p>
+
 ### Explore vectors. Understand retrieval. Build with RAG.
 
 A Java-based semantic search and Retrieval-Augmented Generation (RAG) playground that combines a custom vector-search engine with locally hosted language models.
 
-<br/>
-
-**Java 21 · Spring Boot · PostgreSQL · Redis · Ollama · Docker Compose**
+<p>
+  <strong>Java 21</strong> · <strong>Spring Boot</strong> · <strong>PostgreSQL</strong> · <strong>Redis</strong> · <strong>Ollama</strong> · <strong>Docker Compose</strong>
+</p>
 
 </div>
 
@@ -18,22 +25,38 @@ A Java-based semantic search and Retrieval-Augmented Generation (RAG) playground
 
 VectorCraft is an interactive learning and experimentation platform for understanding how embeddings, vector search, document retrieval, and RAG work together.
 
-It includes a browser-based interface with beginner-friendly AI concepts and an AI Lab for exploring vectors, indexing documents, searching semantically, and asking questions grounded in retrieved document chunks.
+It includes a browser-based interface with beginner-friendly AI concepts and an AI Lab for exploring vectors, indexing documents, searching semantically, and asking questions grounded in retrieved context.
 
-> **Local-first AI:** Ollama runs the embedding and generation models locally. Your application does not require a paid model API to run the core workflow.
+> Local-first AI: Ollama runs the embedding and generation models locally. Your application does not require a paid model API to run the core workflow.
+
+---
+
+## Why VectorCraft?
+
+VectorCraft is designed for developers, students, and AI enthusiasts who want to see the internals of modern AI retrieval systems without hiding everything behind a managed service.
+
+- Learn how embeddings are generated and used
+- Compare vector algorithms like brute force, KD-Tree, and HNSW
+- See how retrieval quality changes with chunking and thresholds
+- Experiment with local RAG pipelines using Ollama
+- Inspect evidence before trusting a generated answer
+
+---
 
 ## Features
 
-- **Interactive AI learning workspace** — introductory material covering LLMs, tokens, embeddings, vector search, RAG, hallucinations, and prompt design.
-- **Custom vector-search engine** — compare Brute Force, KD-Tree, and HNSW search implementations.
-- **Semantic document search** — split documents into chunks, generate embeddings, and retrieve similar chunks.
-- **RAG question answering** — retrieve document context and pass it to an Ollama language model to generate an answer.
-- **Evidence inspection** — inspect retrieved chunks and their distance values to understand what informed a response.
-- **Configurable retrieval** — tune chunk size, overlap, result count, and the RAG relevance threshold.
-- **Redis response cache** — cache RAG responses with a configurable TTL.
-- **PostgreSQL persistence** — persist documents and chunks, with schema migrations managed by Flyway.
-- **Vector visualization and benchmarking** — explore vector representations and compare search approaches.
-- **Docker Compose setup** — start the application and its dependencies with one command.
+- Interactive AI learning workspace covering LLMs, tokens, embeddings, vector search, RAG, hallucinations, and prompt design
+- Custom vector-search engine with Brute Force, KD-Tree, and HNSW implementations
+- Semantic document search by chunking documents, generating embeddings, and matching by similarity
+- RAG question answering that retrieves relevant document context before answering
+- Evidence inspection to review retrieved chunks, distance scores, and answer grounding
+- Configurable retrieval tuning for chunk size, overlap, result count, and relevance threshold
+- Redis response cache with configurable TTL
+- PostgreSQL persistence with Flyway migrations
+- Vector visualization and benchmarking to compare search approaches
+- Docker Compose setup for running the full stack in one command
+
+---
 
 ## Architecture
 
@@ -58,29 +81,33 @@ flowchart TD
 1. A user submits a question through the VectorCraft interface.
 2. Ollama generates an embedding for the question.
 3. The application retrieves candidate document chunks using vector similarity search.
-4. The configured relevance policy determines which retrieved chunks are used as evidence.
+4. The configured relevance policy determines which chunks are used as evidence.
 5. The selected context and question are sent to the configured Ollama generation model.
 6. The response, model details, and retrieved context are returned to the UI. Redis can cache the response.
 
-**Visualization note:** the 2D embedding plot is an exploratory projection, not a calibrated measure of semantic similarity. A plotted distance should not be interpreted as an answer-confidence percentage.
+> Visualization note: the 2D embedding plot is an exploratory projection, not a calibrated measure of semantic similarity. A plotted distance should not be interpreted as an answer-confidence metric.
+
+---
 
 ## Technology stack
 
 | Layer | Technologies |
-|---|---|
-| Language / runtime | Java 21 |
+| --- | --- |
+| Language / Runtime | Java 21 |
 | Backend | Spring Boot 4 |
-| API documentation | Springdoc OpenAPI / Swagger UI |
-| Vector search | Custom Java implementations: Brute Force, KD-Tree, HNSW |
+| API Documentation | Springdoc OpenAPI / Swagger UI |
+| Vector Search | Custom Java implementations: Brute Force, KD-Tree, HNSW |
 | Persistence | PostgreSQL 17, Spring Data JPA |
-| Schema migrations | Flyway |
+| Schema Migrations | Flyway |
 | Cache | Redis 7 |
-| Embeddings and generation | Ollama |
-| Default embedding model | `nomic-embed-text` |
-| Default generation model | `llama3.2` |
+| Embeddings & Generation | Ollama |
+| Default Embedding Model | `nomic-embed-text` |
+| Default Generation Model | `llama3.2` |
 | Frontend | HTML, CSS, JavaScript |
 | Containers | Docker, Docker Compose |
-| Testing | JUnit / Spring Boot Test / Testcontainers dependencies |
+| Testing | JUnit / Spring Boot Test / Testcontainers |
+
+---
 
 ## Getting started
 
@@ -90,7 +117,7 @@ flowchart TD
 - Git (optional, for cloning)
 - Enough disk space and memory for PostgreSQL, Redis, the Java application, and Ollama models
 
-Docker downloads the images and model files on first startup. The Ollama models can require several gigabytes of disk space. If your development machine is low on space, use a remote VM or a remote Ollama host rather than downloading another copy locally.
+Docker downloads the images and model files on first startup. The Ollama models can require several gigabytes of disk space. If your development machine is low on space, use a remote VM or a remote machine.
 
 ### 1. Clone the repository
 
@@ -112,7 +139,7 @@ POSTGRES_PASSWORD=replace_with_a_strong_password
 REDIS_PASSWORD=replace_with_a_different_strong_password
 ```
 
-Use your own strong passwords. **Never commit `.env` or real credentials to GitHub.**
+Use your own strong passwords. Never commit `.env` or real credentials to GitHub.
 
 The Compose file binds services to loopback addresses by default. This is intended for local development and avoids exposing PostgreSQL, Redis, and Ollama to the local network.
 
@@ -151,13 +178,15 @@ Wait for model downloads to finish before testing document ingestion or RAG ques
 ### 5. Open VectorCraft
 
 | Resource | Local URL |
-|---|---|
+| --- | --- |
 | Web interface | http://localhost:8080/ |
 | API status | http://localhost:8080/api/v1/status |
 | Actuator health | http://localhost:8080/actuator/health |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
 
 If a port is already in use, configure the corresponding host-port variable in `.env` or your shell before starting Compose.
+
+---
 
 ## Run tests
 
@@ -169,12 +198,14 @@ mvn clean verify
 
 The Docker image is built with a multi-stage Dockerfile in `docker/Dockerfile`. Compose uses that file to compile the application and package the executable JAR.
 
+---
+
 ## API overview
 
 Base path: `/api/v1`
 
 | Method | Endpoint | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `GET` | `/status` | Application and vector-store summary |
 | `POST` | `/vectors` | Insert a demo vector |
 | `GET` | `/vectors` | List demo vectors |
@@ -219,12 +250,14 @@ Content-Type: application/json
 
 For request/response schemas, use Swagger UI when the application is running.
 
+---
+
 ## Configuration
 
 The following application properties can be configured through environment variables:
 
 | Variable | Default | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `DB_URL` | `jdbc:postgresql://localhost:55432/yourownai` | JDBC URL |
 | `DB_USERNAME` | `postgres` | PostgreSQL username |
 | `DB_PASSWORD` | `postgres` | PostgreSQL password |
@@ -246,7 +279,9 @@ The following application properties can be configured through environment varia
 
 Compose-specific variables include `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, and host binding/port variables such as `APP_HOST_PORT`, `POSTGRES_HOST_PORT`, `REDIS_HOST_PORT`, and `OLLAMA_HOST_PORT`.
 
-The defaults are for local development. **Set strong credentials and private network bindings for any server deployment.** The relevance threshold is model- and corpus-dependent; calibrate it against representative questions rather than treating the default as universal.
+The defaults are for local development. Set strong credentials and private network bindings for any server deployment. The relevance threshold is model- and corpus-dependent; calibrate it against your own documents and questions.
+
+---
 
 ## Project structure
 
@@ -275,6 +310,8 @@ your-own-ai-java/
 └── README.md
 ```
 
+---
+
 ## Engineering notes and limitations
 
 - The custom vector engine is implemented in Java to make search algorithms inspectable and educational.
@@ -284,6 +321,8 @@ your-own-ai-java/
 - Embedding model changes can change vector dimensions and semantic behavior. Re-index documents when changing the embedding model.
 - The RAG relevance threshold needs evaluation on your own documents and questions.
 - A public deployment needs appropriate API access controls, request-size limits, rate limiting, HTTPS, secrets management, backups, and monitoring before it is suitable for untrusted users.
+
+---
 
 ## Screenshots
 
@@ -299,9 +338,11 @@ docs/
 
 For example, once the files are committed, you can embed them with:
 
-```markdown
+```md
 ![VectorCraft AI Lab](docs/screenshots/vector-lab.png)
 ```
+
+---
 
 ## Roadmap
 
@@ -311,10 +352,18 @@ For example, once the files are committed, you can embed them with:
 - [ ] Add repeatable benchmark datasets and recall/latency reporting
 - [ ] Publish a live demo with HTTPS and deployment documentation
 
+---
+
 ## Contributing
 
 Issues and pull requests are welcome. For meaningful changes, include tests and document any configuration changes.
 
+---
+
 ## License
 
 No license has been specified yet. Add a `LICENSE` file before allowing others to reuse, modify, or redistribute this project. Until then, all rights remain with the copyright holder by default.
+
+<p align="center">
+  <sub>Built with ❤️ for learning, experimentation, and local-first AI.</sub>
+</p>
